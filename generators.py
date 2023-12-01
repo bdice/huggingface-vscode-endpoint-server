@@ -28,6 +28,50 @@ class StarCoder(GeneratorBase):
         generated_text: str = json_response['generated_text']
         return generated_text
 
+class RAPIDSCopilot(GeneratorBase):
+    def __init__(self):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from peft import LoraConfig, PeftModel
+
+        model = "bigcode/starcoder"
+        tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(
+            model,
+            quantization_config=None,
+            device_map=None,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16,
+        )
+
+        if not hasattr(model, "hf_device_map"):
+            model.cuda()
+
+        model_id = "bdice/peft-lora-starcoder15B-rapids-copilot"
+        model = PeftModel.from_pretrained(model, model_id, adapter_name="personal_copilot")
+        model.add_weighted_adapter(["personal_copilot"], [0.8], "best_personal_copilot")
+        model.set_adapter("best_personal_copilot")
+
+        self.pipe: Pipeline = pipeline(
+            "text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.bfloat16)
+        self.generation_config = GenerationConfig(
+            max_new_tokens=128,
+            temperature=0.2,
+            top_k=50,
+            top_p=0.95,
+            do_sample=True,
+            repetition_penalty=1.0,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+
+    def generate(self, query: str, parameters: dict) -> str:
+        config: GenerationConfig = GenerationConfig.from_dict({
+            **self.generation_config.to_dict(),
+            **parameters
+        })
+        json_response: dict = self.pipe(query, generation_config=config)[0]
+        generated_text: str = json_response['generated_text']
+        return generated_text
 
 class SantaCoder(GeneratorBase):
     def __init__(self, pretrained: str, device: str = 'cuda'):
