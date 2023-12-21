@@ -19,6 +19,11 @@ class TestGenerator(unittest.TestCase):
         g = StarCoder(pretrained)
         print(g('def fibonacci(n):', {'max_new_tokens': 10}))
 
+    def test_rapids_copilot(self):
+        from generators import RAPIDSCopilot
+        g = RAPIDSCopilot()
+        print(g('def fibonacci(n):', {'max_new_tokens': 100}))
+
     def test_santacoder(self):
         from generators import SantaCoder
         g = SantaCoder('santacoder')
