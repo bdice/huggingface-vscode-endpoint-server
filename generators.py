@@ -39,7 +39,7 @@ class RAPIDSCopilot(GeneratorBase):
         model = AutoModelForCausalLM.from_pretrained(
             model,
             quantization_config=None,
-            device_map=None,
+            device_map="auto",
             trust_remote_code=True,
             torch_dtype=torch.bfloat16,
         )
