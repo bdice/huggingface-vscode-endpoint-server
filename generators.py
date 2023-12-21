@@ -56,6 +56,7 @@ class RAPIDSCopilot(GeneratorBase):
             "text-generation", model=model, tokenizer=tokenizer, torch_dtype=torch.bfloat16)
         self.generation_config = GenerationConfig(
             max_new_tokens=128,
+            max_time=3.0,
             temperature=0.2,
             top_k=50,
             top_p=0.95,
